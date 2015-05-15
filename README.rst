@@ -115,6 +115,48 @@ Run these commands to deploy the project to Heroku:
     heroku run python manage.py createsuperuser
     heroku open
 
+PythonAnywhere
+^^^^^^^^^^^^^^
+
+Make sure your project is fully commited and pushed up to Bitbucket or Github
+or wherever it may be.  Then, log into your PythonAnywhere account, open up a
+**Bash** console, clone your repo, and create a virtualenv:
+
+.. code-block:: bash
+
+    git clone <my-repo-url>
+    cd my-project-name
+    mkvirtualenv --python=/usr/bin/python3.4 my-project-name   # or whichever version of python you are using
+    pip install -r requirements/production.txt  # may take a few minutes
+
+
+Set environment variabes in console
+
+Generate a new secret key:
+
+python -c 'import random; print("".join(random.SystemRandom().choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for _ in range(50)))'
+
+make a note of it somewhere -- you're going to have to set it in multiple places
+
+if you want to use mysql under python 3.4, you'll need to set the engine in config/settings
+
+databases, posgtres, setup your superuser, then open a postgres console and
+
+postgres=# CREATE DATABASE myprojectdb;
+
+you should probably set up a separate user/role and permissions, rather than use the superuser for your access.
+
+then:
+
+
+
+
+Go to web tab, manual config
+
+Set virtualenv
+
+
+
 Dokku
 ^^^^^
 
