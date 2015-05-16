@@ -183,7 +183,7 @@ Now go back to the `postactivate` script and set the `DATABASE_URL` environment 
     # or
     export DATABASE_URL='sqlite:////absolute/path/to/db.sqlite'
 
-If you're using MySQL, you'll probably need to run a `pip install MySQLdb`, and maybe add `MySQLdb` to `requirements/production.txt` too.
+If you're using MySQL, you'll probably need to run a ``pip install MySQLdb``, and maybe add `MySQLdb` to `requirements/production.txt` too.
 
 Now run the migration, and collectstatic:
 
@@ -229,13 +229,13 @@ Click through to the **WSGI configuration file** link (near the top) and edit th
 Back on the Web tab, hit **Reload**, and your app should be live!
 
 NB - you will see security warnings until you set up your SSL certificates. If you
-want to supress them temporarily, set `DJANGO_SECURE_SSL_REDIRECT` to blank.  Follow
+want to supress them temporarily, set ``DJANGO_SECURE_SSL_REDIRECT`` to blank.  Follow
 the instructions here to get SSL set up: https://www.pythonanywhere.com/wiki/SSLOwnDomains 
 
 Optional: static files
 """"""""""""""""""""""
 
-If you want to use the PythonAnywhere static files service instead of using whitenoise or AWS, you'll find its configuration section on the Web tab.  Essentially you'll need an entry to match your `STATIC_URL` and `STATIC_ROOT` settings.  There's more info here: https://www.pythonanywhere.com/wiki/DjangoStaticFiles 
+If you want to use the PythonAnywhere static files service instead of using whitenoise or AWS, you'll find its configuration section on the Web tab.  Essentially you'll need an entry to match your ``STATIC_URL`` and ``STATIC_ROOT`` settings.  There's more info here: https://www.pythonanywhere.com/wiki/DjangoStaticFiles 
 
 
 Future deployments
@@ -251,7 +251,7 @@ For subsequent deployments, the procedure is much simpler.  In a Bash console:
     python manage.py migrate
     python manage.py collectstatic
 
-And then go to the Web tab and hit "Reload"
+And then go to the Web tab and hit **Reload**
 
 
 
