@@ -118,6 +118,7 @@ Run these commands to deploy the project to Heroku:
 PythonAnywhere
 ^^^^^^^^^^^^^^
 
+
 Make sure your project is fully commited and pushed up to Bitbucket or Github
 or wherever it may be.  Then, log into your PythonAnywhere account, open up a
 **Bash** console, clone your repo, and create a virtualenv:
@@ -129,31 +130,112 @@ or wherever it may be.  Then, log into your PythonAnywhere account, open up a
     mkvirtualenv --python=/usr/bin/python3.4 my-project-name   # or whichever version of python you are using
     pip install -r requirements/production.txt  # may take a few minutes
 
+Generate a secret key for yourself, eg like this:
+
+.. code-block:: bash
+
+    python -c 'import random; print("".join(random.SystemRandom().choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for _ in range(50)))'
+
+Make a note of it, since we'll need it here in the console and later on in the web app config tab.
 
 Set environment variabes in console
 
-Generate a new secret key:
+.. code-block:: bash
 
-python -c 'import random; print("".join(random.SystemRandom().choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for _ in range(50)))'
+    export DJANGO_SETTINGS_MODULE='config.settings.production'
+    export DJANGO_SECRET_KEY='<sekrit key goes here>'
+    export SENDGRID_USERNAME='<sendgrid username>'
+    export SENDGRID_PASSWORD='<sendgrid password>'
+    export DJANGO_AWS_ACCESS_KEY_ID=
+    export DJANGO_AWS_SECRET_ACCESS_KEY=
+    export DJANGO_AWS_STORAGE_BUCKET_NAME=
 
-make a note of it somewhere -- you're going to have to set it in multiple places
+* The AWS details are not required if you're using whitenoise or the built-in pythonanywhere static files service, but you do need to set them to blank, as above
 
-if you want to use mysql under python 3.4, you'll need to set the engine in config/settings
+Database setup:
+"""""""""""""""
 
-databases, posgtres, setup your superuser, then open a postgres console and
+Go to the PythonAnywhere databases tab and configure your database.
 
-postgres=# CREATE DATABASE myprojectdb;
+* For Postgres, setup your superuser password, then open a Postgres console and run a `CREATE DATABASE my-db-name`.  You should probably also set up a specific role and permissions for your app, rather than using the superuser credentials.  Make a note of the address and port of your postgres server.
 
-you should probably set up a separate user/role and permissions, rather than use the superuser for your access.
+* For MySQL, set the password and create a database.  Be aware that Django's support for MySQL under Python 3 is still patchy.
 
-then:
+* Alternatively, you can just use sqlite!
+
+Now go back to your console and set the `DATABASE_URL` environment variable:
+
+.. code-block:: bash
+
+    export DATABASE_URL='postgres://<postgres-username>:<postgres-password>@<postgres-address>:<postgres-port>/<database-name>'
+
+    # or
+
+    export DATABASE_URL='mysql://<pythonanywhere-username>:<mysql-password>@mysql.server/<database-name>'
+    pip install MySQLdb
+
+    # or
+
+    export DATABASE_URL='sqlite:////absolute/path/to/db.sqlite'
+
+Now run the migration, and collectstatic:
+
+.. code-block:: bash
+
+    python manage.py migrate
+    python manage.py collectstatic
+    # and, optionally
+    python manage.py createsuperuser
 
 
+Web App config
+""""""""""""""
+
+Go to the PythonAnywhere **Web** tab, hit **Add new web app**, and choose **Manual Config**, and then the version of Python you used for your virtualenv.
+
+When you're redirected back to the web app config screen, set the path to your virtualenv.  If you used virtualenvwrapper as above, you can just enter its name.
+
+Click through to the **WSGI configuration file** link (near the top) and edit the wsgi file. Make it look something like this, repeating the environment variables you used earlier:
 
 
-Go to web tab, manual config
+.. code-block:: python
 
-Set virtualenv
+    import os
+    import sys
+    path = '/home/<your-username>/<your-project-directory>'
+    if path not in sys.path:
+        sys.path.append(path)
+
+    os.environ['DATABASE_URL'] = '<database url as above>'
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings.production'
+    os.environ['DJANGO_SECRET_KEY'] = '<secret key as above>'
+    os.environ['SENDGRID_PASSWORD'] = ''
+    os.environ['SENDGRID_USERNAME'] = ''
+    os.environ['DJANGO_AWS_ACCESS_KEY_ID'] = ''
+    os.environ['DJANGO_AWS_SECRET_ACCESS_KEY'] = ''
+    os.environ['DJANGO_AWS_STORAGE_BUCKET_NAME'] = ''
+    os.environ['DJANGO_SECURE_SSL_REDIRECT'] = ''  # unset this if you want to test your site without SSL first
+
+    from django.core.wsgi import get_wsgi_application
+    application = get_wsgi_application()
+
+Back on the Web tab, hit **Reload**, and your app should be live!
+
+
+Future deployments
+""""""""""""""""""
+
+For subsequent deployments, the procedure is much simpler.  In a Bash console:
+
+.. code-block:: bash
+
+    workon my-virtualenv-name
+    cd project-directory
+    git pull
+    python manage.py migrate
+    python manage.py collectstatic
+
+And then go to the Web tab and hit "Reload"
 
 
 
