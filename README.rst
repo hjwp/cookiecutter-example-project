@@ -119,15 +119,13 @@ PythonAnywhere
 ^^^^^^^^^^^^^^
 
 
-Make sure your project is fully commited and pushed up to Bitbucket or Github
-or wherever it may be.  Then, log into your PythonAnywhere account, open up a
-**Bash** console, clone your repo, and create a virtualenv:
+Make sure your project is fully commited and pushed up to Bitbucket or Github or wherever it may be.  Then, log into your PythonAnywhere account, open up a **Bash** console, clone your repo, and create a virtualenv:
 
 .. code-block:: bash
 
     git clone <my-repo-url>
     cd my-project-name
-    mkvirtualenv --python=/usr/bin/python3.4 my-project-name   # or whichever version of python you are using
+    mkvirtualenv --python=/usr/bin/python3.4 my-project-name # or python2.7, etc
     pip install -r requirements/production.txt  # may take a few minutes
 
 Generate a secret key for yourself, eg like this:
@@ -138,12 +136,20 @@ Generate a secret key for yourself, eg like this:
 
 Make a note of it, since we'll need it here in the console and later on in the web app config tab.
 
-Set environment variabes in console
+Set environment variables via the virtualenv "postactivate" script (this will set them every time you use the virtualenv in a console):
+
+.. code-block:: bash
+
+    vi $VIRTUAL_ENV/bin/postactivate
+    # You can also edit this file via the PythonAnywhere "Files" menu;
+    # look in the .virtualenvs folder.
+
+Add these exports
 
 .. code-block:: bash
 
     export DJANGO_SETTINGS_MODULE='config.settings.production'
-    export DJANGO_SECRET_KEY='<sekrit key goes here>'
+    export DJANGO_SECRET_KEY='<secret key goes here>'
     export SENDGRID_USERNAME='<sendgrid username>'
     export SENDGRID_PASSWORD='<sendgrid password>'
     export DJANGO_AWS_ACCESS_KEY_ID=
@@ -163,25 +169,27 @@ Go to the PythonAnywhere databases tab and configure your database.
 
 * Alternatively, you can just use sqlite!
 
-Now go back to your console and set the `DATABASE_URL` environment variable:
+Now go back to the `postactivate` script and set the `DATABASE_URL` environment variable:
+
+.. code-block:: bash
+
+    vi $VIRTUAL_ENV/bin/postactivate
 
 .. code-block:: bash
 
     export DATABASE_URL='postgres://<postgres-username>:<postgres-password>@<postgres-address>:<postgres-port>/<database-name>'
-
     # or
-
     export DATABASE_URL='mysql://<pythonanywhere-username>:<mysql-password>@mysql.server/<database-name>'
-    pip install MySQLdb
-
     # or
-
     export DATABASE_URL='sqlite:////absolute/path/to/db.sqlite'
+
+If you're using MySQL, you'll probably need to run a `pip install MySQLdb`, and maybe add `MySQLdb` to `requirements/production.txt` too.
 
 Now run the migration, and collectstatic:
 
 .. code-block:: bash
 
+    source $VIRTUAL_ENV/bin/postactivate
     python manage.py migrate
     python manage.py collectstatic
     # and, optionally
@@ -214,12 +222,20 @@ Click through to the **WSGI configuration file** link (near the top) and edit th
     os.environ['DJANGO_AWS_ACCESS_KEY_ID'] = ''
     os.environ['DJANGO_AWS_SECRET_ACCESS_KEY'] = ''
     os.environ['DJANGO_AWS_STORAGE_BUCKET_NAME'] = ''
-    os.environ['DJANGO_SECURE_SSL_REDIRECT'] = ''  # unset this if you want to test your site without SSL first
 
     from django.core.wsgi import get_wsgi_application
     application = get_wsgi_application()
 
 Back on the Web tab, hit **Reload**, and your app should be live!
+
+NB - you will see security warnings until you set up your SSL certificates. If you
+want to supress them temporarily, set `DJANGO_SECURE_SSL_REDIRECT` to blank.  Follow
+the instructions here to get SSL set up: https://www.pythonanywhere.com/wiki/SSLOwnDomains 
+
+Optional: static files
+""""""""""""""""""""""
+
+If you want to use the PythonAnywhere static files service instead of using whitenoise or AWS, you'll find its configuration section on the Web tab.  Essentially you'll need an entry to match your `STATIC_URL` and `STATIC_ROOT` settings.  There's more info here: https://www.pythonanywhere.com/wiki/DjangoStaticFiles 
 
 
 Future deployments
